@@ -30,7 +30,7 @@ proxy-providers:
 mixed-port: 7890                             # 混合代理端口
 allow-lan: true                              # 允许局域网连接
 bind-address: "*"                            # 绑定所有网卡 IP，确保本机所有内网 IP 都能接收局域网请求
-ipv6: false                                  # 关闭 IPv6 解析
+ipv6: true                                   # 允许 IPv6：TUN 接管设备的 IPv6 流量防泄漏，并可使用 IPv6 节点
 log-level: warning                           # 日志级别 仅记录警告和错误，保持后台清爽并节省硬盘
 
 # ── 分流与防封锁机制 ──
@@ -40,7 +40,7 @@ global-client-fingerprint: chrome            # 全局 TLS 指纹伪装: 伪装�
 # ── 性能与连接优化 ──
 unified-delay: true                          # 统一延迟计算方式
 tcp-concurrent: true                         # 开启 TCP 并发连接，大幅加快多图网页加载速度
-keep-alive-idle: 600                         # TCP 空闲 600 秒后启动保活探针
+keep-alive-idle: 60                          # TCP 空闲 60 秒后启动保活探针
 keep-alive-interval: 15                      # 保活心跳包发送间隔 15 秒
 
 # ── 运行状态持久化 ──
@@ -123,7 +123,7 @@ dns:
   enable: true                               # 开启内置 DNS 服务
   cache-algorithm: arc                       # DNS 缓存淘汰算法 ARC 相比传统 LRU 命中率更高
   listen: 0.0.0.0:1053                       # DNS 服务监听端口
-  ipv6: false                                # 关闭 IPv6 解析 保持与全局设置一致
+  ipv6: false                                # 不向设备返回 IPv6 地址（AAAA），App 只用 IPv4，减少绕过代理的可能
   respect-rules: true                        # DNS 请求遵循分流规则，由规则决定 DNS 查询走向而非固定出口
   prefer-h3: false                           # 是否优先使用 DoH/DoT 的 HTTP/3 传输，关闭以保证兼容性
 
@@ -173,6 +173,16 @@ dns:
     - "rule-set:R-securities-cn"             # 国内证券
     - "rule-set:R-finance-cn"                # 国内金融
     - "rule-set:R-ntp-cn"                    # 国内 NTP：假 IP 导致时间同步失败
+    - "rule-set:R-icloud-cn"                 # iCloud 国内节点 云上贵州
+    - "rule-set:R-itunes-cn"                 # iTunes 国内节点
+    - "rule-set:R-apple-pki"                 # Apple 证书服务
+    - "rule-set:R-apple-update"              # iOS/macOS 系统更新
+    - "rule-set:R-apple-cn"                  # Apple 中国专属域名
+    - "rule-set:R-apple-at-cn"               # Apple 国内服务补充
+    - "rule-set:R-apple-dev-cn"              # Apple 开发者国内节点
+    - "rule-set:R-icloud"                    # iCloud
+    - "rule-set:R-itunes"                    # iTunes
+    - "rule-set:R-apple"                     # Apple 全家桶
     - "rule-set:R-wechat"
     - "rule-set:R-alipay"
     - "rule-set:R-netease"
@@ -385,7 +395,7 @@ rules:
   # ══════════════════════════════════════════
   # 2.LAN
   # ══════════════════════════════════════════
-  - RULE-SET,R-private-ip,DIRECT                                   # 内网 IP 地址  
+  - RULE-SET,R-private-ip,DIRECT,no-resolve                        # 内网 IP 地址  
   - RULE-SET,R-private,DIRECT                                      # 内网域名
   - RULE-SET,R-fakeipfilter,DIRECT                                 # FakeIP 过滤
   - RULE-SET,R-connectivity,DIRECT                                 # 网络连通性检测
